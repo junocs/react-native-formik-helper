@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import * as yup from 'yup'
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native'
 import { Form, Metrics, SubmitButtonProps, withBooleanField, withTextInputField } from 'react-native-formik-helper'

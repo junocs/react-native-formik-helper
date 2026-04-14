@@ -1,6 +1,6 @@
 import type { FormikConfig, FormikValues } from 'formik'
 import { ElementType, ForwardRefExoticComponent, FunctionComponent, PropsWithoutRef, RefAttributes } from 'react'
-import type { ViewStyle, StyleProp } from 'react-native'
+import type { ViewStyle, StyleProp, ReturnKeyTypeOptions } from 'react-native'
 import { NativeMethods } from 'react-native'
 import { ImageStyle } from 'react-native'
 import { TouchableOpacityProps } from 'react-native'
@@ -26,18 +26,14 @@ export interface FormErrorProps extends Pick<Styles, 'errorContainerStyle' | 'er
 }
 
 export interface SubmitButtonProps
-  extends Pick<TouchableOpacityProps, 'disabled'>,
-    Pick<Styles, 'submitButtonStyle' | 'submitButtonTitleStyle'> {
+  extends Pick<TouchableOpacityProps, 'disabled'>, Pick<Styles, 'submitButtonStyle' | 'submitButtonTitleStyle'> {
   isLoading?: boolean
   submitButtonTitle?: string
   onPress?: () => void
 }
 
 export interface FormProps<T extends FormikValues>
-  extends Omit<FormikConfig<T>, 'children'>,
-    FormErrorProps,
-    SubmitButtonProps,
-    Pick<Styles, 'containerStyle'> {
+  extends Omit<FormikConfig<T>, 'children'>, FormErrorProps, SubmitButtonProps, Pick<Styles, 'containerStyle'> {
   useDefaultFormError?: boolean
   useDefaultSubmitButton?: boolean
   renderHeader?: FormikConfig<T>['children']
@@ -59,4 +55,13 @@ export interface GenericFieldProps {
 
 export interface TextInputFieldProps extends GenericFieldProps {
   type?: 'email' | 'password' | 'digits' | 'name'
+}
+
+export type FieldRegistrationMap = Map<number, { focus?: () => void }>
+
+export interface InputFieldEnhancementProps {
+  returnKeyType: ReturnKeyTypeOptions
+  blurOnSubmit: boolean
+  onSubmitEditing: () => void
+  fieldRegistrationRef: (instance: { focus?: () => void } | null) => void
 }

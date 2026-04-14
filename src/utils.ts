@@ -1,30 +1,45 @@
-/** A recursive helper function to set a "key" prop for each fields in a form */
-
 import { Children, ReactElement, ReactNode, cloneElement, isValidElement } from 'react'
-import { FormErrorProps } from './types'
+import { FormErrorProps, InputFieldEnhancementProps } from './types'
 
-export const getInputFields = (children?: ReactNode | ReactNode[]): any =>
-  Children.toArray(children).reduce((partialInputsUnknown, childUnknown) => {
-    const partialInputs = partialInputsUnknown as ReactElement[]
+export const getInputFields = (children?: ReactNode | ReactNode[]): ReactElement[] =>
+  Children.toArray(children).reduce<ReactElement[]>((partialInputs, childUnknown) => {
     const child = childUnknown as ReactElement
-    if (child && child.props) {
-      if (child.props.name) {
-        /** If an element contains "name" props, we set key to it */
-        return partialInputs.concat(
-          cloneElement(child, {
-            key: child.props.name,
-          })
-        )
+    const childProps = child?.props as { name?: string; children?: ReactNode } | undefined
+    if (childProps) {
+      if (childProps.name) {
+        return partialInputs.concat(child)
       }
-      if (child.props.children && isValidElement(child.props.children)) {
-        return partialInputs.concat(getInputFields(child.props.children))
+      if (childProps.children) {
+        return partialInputs.concat(getInputFields(childProps.children))
       }
-    }
-    if (isValidElement(child)) {
-      return partialInputs.concat(child)
     }
     return partialInputs
   }, [])
+
+export const enhanceFormChildren = (
+  children: ReactNode | ReactNode[] | undefined,
+  propsMap: Map<string, InputFieldEnhancementProps>
+): ReactNode[] =>
+  Children.toArray(children).map((child) => {
+    if (!isValidElement(child)) return child
+
+    const element = child as ReactElement
+    const elementProps = element.props as { name?: string; children?: ReactNode } | undefined
+
+    if (elementProps?.name && propsMap.has(elementProps.name)) {
+      return cloneElement(element, {
+        key: elementProps.name,
+        ...propsMap.get(elementProps.name),
+      })
+    }
+
+    if (elementProps?.children) {
+      const enhanced = enhanceFormChildren(elementProps.children, propsMap)
+      return cloneElement(element, {}, ...enhanced)
+    }
+
+    return child
+  })
 
 export const getErrorMessageRecursively = (error: FormErrorProps['error']): string | null => {
   if (typeof error === 'string') {

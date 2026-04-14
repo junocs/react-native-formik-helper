@@ -1,18 +1,9 @@
 import { Formik, FormikHelpers, FormikProps, FormikValues } from 'formik'
-import React, {
-  PropsWithChildren,
-  ReactElement,
-  cloneElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { PropsWithChildren, ReactElement, useCallback, useMemo, useRef } from 'react'
 
-import { FormProps, InputRef } from './types'
-import { Keyboard } from 'react-native'
-import { getInputFields } from './utils'
+import { FieldRegistrationMap, FormProps, InputFieldEnhancementProps } from './types'
+import { Keyboard, ReturnKeyTypeOptions } from 'react-native'
+import { enhanceFormChildren, getInputFields } from './utils'
 import { SafeAreaView } from 'react-native'
 import { DefaultFormError, DefaultSubmitButton } from './components'
 
@@ -39,19 +30,9 @@ export function Form<T extends FormikValues>({
   ...rest
 }: PropsWithChildren<FormProps<T>>) {
   const formikRef = useRef<FormikProps<T>>(null)
-  const [fieldRefs, setFieldRefs] = useState<InputRef[]>([])
+  const fieldRegistrationMapRef = useRef<FieldRegistrationMap>(new Map())
 
   const inputFields = useMemo(() => getInputFields(children), [children])
-
-  const handleFieldFocus = useCallback(
-    (index: number) => {
-      const ref = fieldRefs[index]
-      if (ref && ref.focus) {
-        ref.focus()
-      }
-    },
-    [fieldRefs]
-  )
 
   const onSubmit = useCallback(
     (values: T, formikHelpers: FormikHelpers<T>) => {
@@ -61,56 +42,61 @@ export function Form<T extends FormikValues>({
     [propOnSubmit]
   )
 
-  const autoFocusFields = useMemo(
-    () =>
-      inputFields.map((field: ReactElement, index: number) => {
-        let lastFocusIndex: number | null = null
-        for (let idx = fieldRefs.length - 1; idx > -1; idx -= 1) {
-          if (fieldRefs[idx]) {
-            lastFocusIndex = idx
-            break
-          }
+  const enhancedChildren = useMemo(() => {
+    let lastFocusableIndex = inputFields.length - 1
+    if (fieldRegistrationMapRef.current.size > 0) {
+      for (let idx = inputFields.length - 1; idx >= 0; idx -= 1) {
+        if (fieldRegistrationMapRef.current.has(idx)) {
+          lastFocusableIndex = idx
+          break
         }
-        let nextFocusIndex: number | null = null
-        for (let idx = index + 1; idx < fieldRefs.length; idx += 1) {
-          if (fieldRefs[idx]) {
-            nextFocusIndex = idx
-            break
-          }
-        }
-        const returnKeyType = index === lastFocusIndex ? 'done' : 'next'
-        return cloneElement(field, {
-          returnKeyType: field.props.returnKeyType || returnKeyType,
-          onSubmitEditing: () => {
-            if (nextFocusIndex) {
-              handleFieldFocus(nextFocusIndex)
-            }
-            if (field.props.onSubmitEditing) {
-              field.props.onSubmitEditing()
-            }
-          },
-        })
-      }),
-    [inputFields, fieldRefs, handleFieldFocus]
-  )
-
-  useEffect(() => {
-    const updatedFieldRefs = inputFields.map((field: { ref?: { current?: { focus?: () => void } | null } }) => {
-      const { ref } = field
-      if (ref && ref.current) {
-        return ref.current
       }
-      return null
-    }) as InputRef[]
-    setFieldRefs(updatedFieldRefs)
-  }, [inputFields])
+    }
+
+    const propsMap = new Map<string, InputFieldEnhancementProps>()
+    inputFields.forEach((field: ReactElement, index: number) => {
+      const fieldProps = field.props as {
+        name: string
+        returnKeyType?: ReturnKeyTypeOptions
+        onSubmitEditing?: () => void
+      }
+      const isLastFocusable = index >= lastFocusableIndex
+      const returnKeyType = isLastFocusable ? 'done' : 'next'
+      propsMap.set(fieldProps.name, {
+        returnKeyType: fieldProps.returnKeyType || returnKeyType,
+        blurOnSubmit: isLastFocusable,
+        onSubmitEditing: () => {
+          for (let nextIdx = index + 1; nextIdx < inputFields.length; nextIdx += 1) {
+            const nextInstance = fieldRegistrationMapRef.current.get(nextIdx)
+            if (nextInstance?.focus) {
+              nextInstance.focus()
+              return
+            }
+          }
+          Keyboard.dismiss()
+          if (fieldProps.onSubmitEditing) {
+            fieldProps.onSubmitEditing()
+          }
+        },
+        fieldRegistrationRef: (instance: { focus?: () => void } | null) => {
+          if (instance?.focus) {
+            fieldRegistrationMapRef.current.set(index, instance)
+          } else {
+            fieldRegistrationMapRef.current.delete(index)
+          }
+        },
+      })
+    })
+
+    return enhanceFormChildren(children, propsMap)
+  }, [inputFields, children])
 
   return (
     <Formik<T> {...rest} innerRef={formikRef} onSubmit={onSubmit}>
       {({ isValid, handleSubmit, ...props }) => (
         <SafeAreaView style={containerStyle}>
           {typeof renderHeader === 'function' ? renderHeader({ isValid, handleSubmit, ...props }) : renderHeader}
-          {autoFocusFields}
+          {enhancedChildren}
           {useDefaultFormError && (
             <FormError
               error={error}

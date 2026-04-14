@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { View } from 'react-native'
 import { FormErrorProps, SubmitButtonProps } from './types'
 import { getErrorMessageRecursively } from './utils'

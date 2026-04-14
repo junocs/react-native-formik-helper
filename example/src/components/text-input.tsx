@@ -1,14 +1,6 @@
-import React, { Ref, forwardRef, useCallback, useState } from 'react'
-import {
-  NativeSyntheticEvent,
-  TextInput as RNTextInput,
-  StyleProp,
-  StyleSheet,
-  TextInputFocusEventData,
-  View,
-  ViewStyle,
-} from 'react-native'
-import { TextInput as MUITextInput, TextInputProps, HelperText } from 'react-native-paper'
+import { Ref, forwardRef, useCallback, useState } from 'react'
+import { StyleProp, StyleSheet, TextInput as RNTextInput, View, ViewStyle } from 'react-native'
+import { HelperText, TextInput as MUITextInput, TextInputProps } from 'react-native-paper'
 
 export interface Props extends Omit<TextInputProps, 'error'> {
   error?: string
@@ -32,18 +24,18 @@ export const TextInput = forwardRef(
     const [touched, setTouched] = useState(false)
 
     const onBlur = useCallback(
-      (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+      (e: Parameters<NonNullable<TextInputProps['onBlur']>>[0]) => {
         setFocused(false)
         setTouched(true)
-        propOnBlur?.(e)
+        propOnBlur?.(e as any)
       },
       [propOnBlur]
     )
 
     const onFocus = useCallback(
-      (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
+      (e: Parameters<NonNullable<TextInputProps['onFocus']>>[0]) => {
         setFocused(true)
-        propOnFocus?.(e)
+        propOnFocus?.(e as any)
       },
       [propOnFocus]
     )

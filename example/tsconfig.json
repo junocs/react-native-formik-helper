@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig",
+  "compilerOptions": {
+    // Avoid expo-cli auto-generating a tsconfig
+    "baseUrl": ".",
+    "paths": {
+      "react-native-formik-helper": ["../src/index"]
+    }
+  },
+  "exclude": ["node_modules"]
+}
