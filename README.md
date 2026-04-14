@@ -14,7 +14,7 @@ Inspired by [React Native Formik](https://github.com/bamlab/react-native-formik)
 **Features**
 
 - Automatically advance focus to the next input on submit (`returnKeyType="next"` / `"done"` set automatically)
-- Convert any React Native input into a `Formik` field with `withTextInputField` or `withBooleanField`
+- Convert any React Native input into a Formik field with `withTextInputField`, `withBooleanField`, `withSelectField`, or `withDateTimeField`
 - Drop-in `Form` component that handles submission, error display, and keyboard dismissal
 - Fully typed with TypeScript
 
@@ -38,19 +38,22 @@ yarn add formik react-native-formik-helper
 ### 1. Wrap your inputs with a field HoC
 
 ```tsx
-import { withTextInputField, withBooleanField } from 'react-native-formik-helper'
+import { withTextInputField, withBooleanField, withSelectField, withDateTimeField } from 'react-native-formik-helper'
 import { TextInput, TextInputProps } from './components/TextInput'
 import { Checkbox, CheckboxProps } from './components/Checkbox'
+import { Select, SelectProps } from './components/Select'
+import { DateTimePicker, DateTimePickerProps } from './components/DateTimePicker'
 
 // Create typed field components once, reuse everywhere
+const NameField = withTextInputField<TextInputProps>(TextInput)
 const EmailField = withTextInputField<TextInputProps>(TextInput)
 const PasswordField = withTextInputField<TextInputProps>(TextInput)
-const NameField = withTextInputField<TextInputProps>(TextInput)
 const CheckboxField = withBooleanField<CheckboxProps>(Checkbox)
+const CountryField = withSelectField<SelectProps>(Select)
+const BirthDateField = withDateTimeField<DateTimePickerProps>(DateTimePicker)
 ```
 
-Your wrapped component receives `value`, `error`, `onChangeText`, and `onBlur` from Formik automatically.
-Any extra props you pass are forwarded to the underlying component unchanged.
+Your wrapped component receives Formik-connected props (`value`, `error`, and the appropriate change handler) automatically. Any extra props you pass are forwarded to the underlying component unchanged.
 
 ### 2. Use `<Form>` to compose them
 
@@ -58,12 +61,19 @@ Any extra props you pass are forwarded to the underlying component unchanged.
 import React, { useCallback } from 'react'
 import * as yup from 'yup'
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native'
-import { Form } from 'react-native-formik-helper'
+import { Form, SelectOption } from 'react-native-formik-helper'
+
+const COUNTRY_OPTIONS: SelectOption[] = [
+  { label: 'United States', value: 'us' },
+  { label: 'United Kingdom', value: 'gb' },
+]
 
 const Fields = {
   name: 'name',
   email: 'email',
   password: 'password',
+  country: 'country',
+  birthDate: 'birthDate',
   acceptedTos: 'acceptedTos',
 }
 
@@ -71,13 +81,17 @@ type FormValues = {
   name: string
   email: string
   password: string
+  country: string
+  birthDate: Date | undefined
   acceptedTos: boolean
 }
 
 const validationSchema = yup.object().shape({
-  [Fields.name]: yup.string().min(4).max(32).required(),
+  [Fields.name]: yup.string().min(2).max(64).required(),
   [Fields.email]: yup.string().email().required(),
   [Fields.password]: yup.string().min(8).max(50).required(),
+  [Fields.country]: yup.string().required('Please select your country'),
+  [Fields.birthDate]: yup.date().required('Date of birth is required'),
   [Fields.acceptedTos]: yup.boolean().oneOf([true]).required(),
 })
 
@@ -91,13 +105,22 @@ export default function SignUpScreen() {
       <ScrollView keyboardShouldPersistTaps="handled">
         <Form<FormValues>
           validateOnMount
-          initialValues={{ name: '', email: '', password: '', acceptedTos: false }}
+          initialValues={{
+            name: '',
+            email: '',
+            password: '',
+            country: '',
+            birthDate: undefined,
+            acceptedTos: false,
+          }}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          <NameField name={Fields.name} label="Full name" textContentType="name" />
-          <EmailField name={Fields.email} type="email" label="Email address" />
-          <PasswordField name={Fields.password} type="password" label="Password" />
+          <NameField name={Fields.name} label="Full name" type="name" />
+          <EmailField name={Fields.email} label="Email address" type="email" />
+          <PasswordField name={Fields.password} label="Password" type="password" />
+          <CountryField name={Fields.country} label="Country" options={COUNTRY_OPTIONS} />
+          <BirthDateField name={Fields.birthDate} label="Date of birth" mode="date" />
           <CheckboxField name={Fields.acceptedTos} label="I agree to terms and conditions" />
         </Form>
       </ScrollView>
@@ -108,7 +131,7 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({ container: { flex: 1 } })
 ```
 
-Focus advances from one field to the next automatically — no `ref` wiring required.
+Focus advances from one text field to the next automatically — no `ref` wiring required. Select and date fields are transparently skipped in the keyboard focus chain.
 
 ---
 
@@ -133,7 +156,7 @@ Wraps `<Formik>` and provides auto-focus chaining, error display, and a submit b
 | `SubmitButton`             | `FC<SubmitButtonProps>`     | built-in | Replace the submit button entirely                        |
 | `renderHeader`             | `FormikConfig['children']`  | —        | Render prop / node inserted above the fields              |
 | `renderFooter`             | `FormikConfig['children']`  | —        | Render prop / node inserted below the submit button       |
-| `containerStyle`           | `StyleProp<ViewStyle>`      | —        | Style for the outer `SafeAreaView`                        |
+| `containerStyle`           | `StyleProp<ViewStyle>`      | —        | Style for the outer container `View`                      |
 | + all `FormikConfig` props |                             |          | e.g. `validateOnMount`, `enableReinitialize`, …           |
 
 #### Custom submit button
@@ -206,11 +229,11 @@ Higher-order component for toggle/checkbox inputs.
 
 **Props injected automatically:**
 
-| Prop      | Description                             |
-| --------- | --------------------------------------- |
-| `value`   | Current boolean value from Formik state |
-| `error`   | Validation error string                 |
-| `onPress` | Toggles the field value                 |
+| Prop      | Description                                            |
+| --------- | ------------------------------------------------------ |
+| `value`   | Current boolean value from Formik state                |
+| `error`   | Validation error string                                |
+| `onPress` | Toggles the field value and marks the field as touched |
 
 **Required prop:**
 
@@ -220,17 +243,80 @@ Higher-order component for toggle/checkbox inputs.
 
 ---
 
-### `Metrics`
+### `withSelectField<T, V>(Component)`
 
-A set of consistent spacing constants exported for convenience.
+Higher-order component for dropdown / picker inputs. The value type `V` defaults to `string` but can be any serialisable type.
+
+**Props injected automatically:**
+
+| Prop            | Description                                                 |
+| --------------- | ----------------------------------------------------------- |
+| `value`         | Currently selected value from Formik state                  |
+| `error`         | Validation error string                                     |
+| `onValueChange` | Updates Formik state and marks the field as touched on pick |
+
+**Additional props on the field component:**
+
+| Prop      | Type                | Description                                   |
+| --------- | ------------------- | --------------------------------------------- |
+| `name`    | `string`            | Formik field name (required)                  |
+| `options` | `SelectOption<V>[]` | List of `{ label, value }` options to display |
+
+**`SelectOption<V>` type:**
 
 ```ts
-import { Metrics } from 'react-native-formik-helper'
+interface SelectOption<V = string> {
+  label: string
+  value: V
+}
+```
 
-// Available values (in dp):
-// tiny: 4, xxxs: 6, xxs: 8, xs: 12, small: 16, smedium: 18,
-// medium: 20, large: 24, xl: 28, xxl: 32, xxxl: 40, huge: 48, massive: 64
-// iconHeight: 24
+**Example:**
+
+```tsx
+const COUNTRY_OPTIONS: SelectOption[] = [
+  { label: 'United States', value: 'us' },
+  { label: 'Canada',        value: 'ca' },
+]
+
+const CountryField = withSelectField<SelectProps>(Select)
+<CountryField name="country" label="Country" options={COUNTRY_OPTIONS} />
+```
+
+---
+
+### `withDateTimeField<T>(Component)`
+
+Higher-order component for date, time, or date-time picker inputs.
+
+**Props injected automatically:**
+
+| Prop       | Description                                                 |
+| ---------- | ----------------------------------------------------------- |
+| `value`    | Current `Date` (or `undefined`) from Formik state           |
+| `error`    | Validation error string                                     |
+| `onChange` | Updates Formik state and marks the field as touched on pick |
+
+**Additional props on the field component:**
+
+| Prop          | Type                             | Description                                   |
+| ------------- | -------------------------------- | --------------------------------------------- |
+| `name`        | `string`                         | Formik field name (required)                  |
+| `mode`        | `'date' \| 'time' \| 'datetime'` | Picker mode (passed through to the component) |
+| `minimumDate` | `Date`                           | Earliest selectable date/time                 |
+| `maximumDate` | `Date`                           | Latest selectable date/time                   |
+
+**Example:**
+
+```tsx
+const BirthDateField = withDateTimeField<DateTimePickerProps>(DateTimePicker)
+
+// Date only
+<BirthDateField name="birthDate" mode="date" maximumDate={new Date()} />
+
+// Date + time (e.g. appointment booking)
+const AppointmentField = withDateTimeField<DateTimePickerProps>(DateTimePicker)
+<AppointmentField name="appointmentAt" mode="datetime" />
 ```
 
 ---

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~55.0.9",
+    "@react-native-community/datetimepicker": "8.6.0",
     "expo": "~55.0.15",
     "expo-status-bar": "~55.0.5",
     "formik": "^2.4.9",

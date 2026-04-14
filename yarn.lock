@@ -2773,6 +2773,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native-community/datetimepicker@npm:8.6.0":
+  version: 8.6.0
+  resolution: "@react-native-community/datetimepicker@npm:8.6.0"
+  dependencies:
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    expo: ">=52.0.0"
+    react: "*"
+    react-native: "*"
+    react-native-windows: "*"
+  peerDependenciesMeta:
+    expo:
+      optional: true
+    react-native-windows:
+      optional: true
+  checksum: 10c0/4f7e84480e3a324a1f4e235d13552468a758a0bf3d6de6a67ef39bfc56c18c41566c4411cc5fc075d000cc5f744a63ced77dd38c6bb13ae15cc980f9af891b56
+  languageName: node
+  linkType: hard
+
 "@react-native/assets-registry@npm:0.83.4":
   version: 0.83.4
   resolution: "@react-native/assets-registry@npm:0.83.4"
@@ -10163,6 +10182,7 @@ __metadata:
   resolution: "react-native-formik-helper-example@workspace:example"
   dependencies:
     "@expo/metro-runtime": "npm:~55.0.9"
+    "@react-native-community/datetimepicker": "npm:8.6.0"
     expo: "npm:~55.0.15"
     expo-status-bar: "npm:~55.0.5"
     formik: "npm:^2.4.9"

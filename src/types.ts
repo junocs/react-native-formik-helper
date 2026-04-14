@@ -53,8 +53,50 @@ export interface GenericFieldProps {
   name: string
 }
 
+export type AutoFocusProps = Partial<
+  Pick<InputFieldEnhancementProps, 'fieldRegistrationRef' | 'returnKeyType' | 'blurOnSubmit' | 'onSubmitEditing'>
+>
+
+export type HasTextInputTypeProps = {
+  keyboardType?: string
+  secureTextEntry?: boolean
+  autoCorrect?: boolean
+  autoCapitalize?: string
+  onChangeText?: (text: string) => void
+  onBlur?: (...args: any[]) => void
+}
+
+export type HasSelectTypeProps = {
+  onValueChange?: (value: any) => void
+}
+
+export type HasDateTypeProps = {
+  onChange?: (date: Date) => void
+  value?: Date
+}
+
 export interface TextInputFieldProps extends GenericFieldProps {
   type?: 'email' | 'password' | 'digits' | 'name'
+}
+
+export interface SelectOption<T = string> {
+  label: string
+  value: T
+}
+
+export interface SelectFieldProps<T = string> extends GenericFieldProps {
+  options?: SelectOption<T>[]
+  onValueChange?: (value: T) => void
+}
+
+export interface DateTimeFieldProps extends GenericFieldProps {
+  /** Whether to show a date picker, time picker, or both */
+  mode?: 'date' | 'time' | 'datetime'
+  /** Minimum selectable date/time */
+  minimumDate?: Date
+  /** Maximum selectable date/time */
+  maximumDate?: Date
+  onChange?: (date: Date) => void
 }
 
 export type FieldRegistrationMap = Map<number, { focus?: () => void }>

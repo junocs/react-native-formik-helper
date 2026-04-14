@@ -2,9 +2,8 @@ import { Formik, FormikHelpers, FormikProps, FormikValues } from 'formik'
 import { PropsWithChildren, ReactElement, useCallback, useMemo, useRef } from 'react'
 
 import { FieldRegistrationMap, FormProps, InputFieldEnhancementProps } from './types'
-import { Keyboard, ReturnKeyTypeOptions } from 'react-native'
+import { Keyboard, ReturnKeyTypeOptions, View } from 'react-native'
 import { enhanceFormChildren, getInputFields } from './utils'
-import { SafeAreaView } from 'react-native'
 import { DefaultFormError, DefaultSubmitButton } from './components'
 
 export function Form<T extends FormikValues>({
@@ -94,7 +93,7 @@ export function Form<T extends FormikValues>({
   return (
     <Formik<T> {...rest} innerRef={formikRef} onSubmit={onSubmit}>
       {({ isValid, handleSubmit, ...props }) => (
-        <SafeAreaView style={containerStyle}>
+        <View style={containerStyle}>
           {typeof renderHeader === 'function' ? renderHeader({ isValid, handleSubmit, ...props }) : renderHeader}
           {enhancedChildren}
           {useDefaultFormError && (
@@ -118,7 +117,7 @@ export function Form<T extends FormikValues>({
             />
           )}
           {typeof renderFooter === 'function' ? renderFooter({ isValid, handleSubmit, ...props }) : renderFooter}
-        </SafeAreaView>
+        </View>
       )}
     </Formik>
   )

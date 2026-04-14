@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
-import { View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { FormErrorProps, SubmitButtonProps } from './types'
 import { getErrorMessageRecursively } from './utils'
-import styles from './styles'
 import { Text } from 'react-native'
 import { Image } from 'react-native'
 import { TouchableOpacity } from 'react-native'
@@ -43,3 +42,34 @@ export const DefaultSubmitButton: React.FC<SubmitButtonProps> = ({
     </TouchableOpacity>
   )
 }
+
+const styles = StyleSheet.create({
+  errorText: {
+    flex: 1,
+    color: 'white',
+  },
+  errorIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 12,
+  },
+  errorContainer: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#B22D1D',
+  },
+  submitButton: {
+    marginTop: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 4,
+    padding: 16,
+    backgroundColor: 'forestgreen',
+  },
+  submitButtonTitle: {
+    color: 'white',
+  },
+})
