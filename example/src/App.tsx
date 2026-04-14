@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import * as yup from 'yup'
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native'
 import { Form, Metrics, SubmitButtonProps, withBooleanField, withTextInputField } from 'react-native-formik-helper'
@@ -20,10 +20,6 @@ const Fields = {
 type FormValues = { email: string; password: string; acceptedTos: boolean }
 
 export default function App() {
-  const nameRef = useRef(null)
-  const emailRef = useRef(null)
-  const passwordRef = useRef(null)
-
   const renderSubmitButton = useCallback(
     ({ isLoading, disabled, onPress }: SubmitButtonProps) => (
       <SubmitButton loading={isLoading} disabled={disabled} onPress={onPress} style={styles.submitButton}>
@@ -55,9 +51,9 @@ export default function App() {
           onSubmit={() => {}}
           SubmitButton={renderSubmitButton}
         >
-          <NameField ref={nameRef} name={Fields.name} label="Full name" textContentType="name" />
-          <EmailField ref={emailRef} name={Fields.email} type="email" label="Email address" />
-          <PasswordField ref={passwordRef} name={Fields.password} type="password" label="Password" />
+          <NameField name={Fields.name} label="Full name" textContentType="name" />
+          <EmailField name={Fields.email} type="email" label="Email address" />
+          <PasswordField name={Fields.password} type="password" label="Password" />
           <CheckboxField name={Fields.acceptedTos} label="I agree to terms and conditions" />
         </Form>
       </ScrollView>

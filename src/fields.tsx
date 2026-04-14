@@ -16,13 +16,22 @@ import {
   InputFieldEnhancementProps,
 } from './types'
 import { useFormikContext } from 'formik'
-import type { NativeSyntheticEvent, TextInputChangeEventData, TextInputProps } from 'react-native'
+import type { NativeSyntheticEvent, TextInputChangeEventData } from 'react-native'
 
 type AutoFocusProps = Partial<
   Pick<InputFieldEnhancementProps, 'fieldRegistrationRef' | 'returnKeyType' | 'blurOnSubmit' | 'onSubmitEditing'>
 >
 
-export function withTextInputField<T extends TextInputProps>(WrappedComponent: WrappedComponentType) {
+type HasTextInputTypeProps = {
+  keyboardType?: string
+  secureTextEntry?: boolean
+  autoCorrect?: boolean
+  autoCapitalize?: string
+  onChangeText?: (text: string) => void
+  onBlur?: (...args: any[]) => void
+}
+
+export function withTextInputField<T extends HasTextInputTypeProps>(WrappedComponent: WrappedComponentType) {
   const RenderFn = (
     {
       name,
