@@ -64,7 +64,8 @@ export function withTextInputField<T extends HasTextInputTypeProps>(WrappedCompo
     }: TextInputFieldProps & T & AutoFocusProps,
     externalRef: Ref<InputRef>
   ) => {
-    const { errors, values, setFieldValue, setFieldTouched, isSubmitting } = useFormikContext<Record<string, string>>()
+    const { errors, values, touched, setFieldValue, setFieldTouched, isSubmitting } =
+      useFormikContext<Record<string, string>>()
 
     const innerRef = useRef<InputRef>(null)
 
@@ -117,6 +118,7 @@ export function withTextInputField<T extends HasTextInputTypeProps>(WrappedCompo
       <WrappedComponent
         ref={innerRef}
         error={errors[name]}
+        touched={touched[name]}
         value={values[name]}
         onChangeText={onChangeText}
         onBlur={onBlur}
@@ -148,7 +150,7 @@ export function withTextInputField<T extends HasTextInputTypeProps>(WrappedCompo
  */
 export function withBooleanField<T extends any>(WrappedComponent: WrappedComponentType) {
   return ({ name, ...rest }: GenericFieldProps & T) => {
-    const { errors, values, setFieldValue, setFieldTouched } = useFormikContext<Record<string, boolean>>()
+    const { errors, values, touched, setFieldValue, setFieldTouched } = useFormikContext<Record<string, boolean>>()
 
     const onValueChanged = useCallback(() => {
       const next = !values[name]
@@ -156,7 +158,15 @@ export function withBooleanField<T extends any>(WrappedComponent: WrappedCompone
       setFieldTouched(name, true, false)
     }, [setFieldValue, setFieldTouched, values, name])
 
-    return <WrappedComponent {...rest} error={errors[name]} value={values[name]} onPress={onValueChanged} />
+    return (
+      <WrappedComponent
+        {...rest}
+        error={errors[name]}
+        touched={touched[name]}
+        value={values[name]}
+        onPress={onValueChanged}
+      />
+    )
   }
 }
 
@@ -183,7 +193,7 @@ export function withSelectField<T extends HasSelectTypeProps>(WrappedComponent: 
     { name, onValueChange: propOnValueChange, fieldRegistrationRef, ...rest }: SelectFieldProps<V> & T & AutoFocusProps,
     externalRef: Ref<InputRef>
   ) => {
-    const { errors, values, setFieldValue, setFieldTouched } = useFormikContext<Record<string, V>>()
+    const { errors, values, touched, setFieldValue, setFieldTouched } = useFormikContext<Record<string, V>>()
 
     const innerRef = useRef<InputRef>(null)
 
@@ -221,6 +231,7 @@ export function withSelectField<T extends HasSelectTypeProps>(WrappedComponent: 
         ref={innerRef}
         {...rest}
         error={errors[name]}
+        touched={touched[name]}
         value={values[name]}
         onValueChange={onValueChange}
       />
@@ -256,7 +267,8 @@ export function withDateTimeField<T extends HasDateTypeProps>(WrappedComponent: 
     { name, onChange: propOnChange, fieldRegistrationRef, ...rest }: DateTimeFieldProps & T & AutoFocusProps,
     externalRef: Ref<InputRef>
   ) => {
-    const { errors, values, setFieldValue, setFieldTouched } = useFormikContext<Record<string, Date | undefined>>()
+    const { errors, values, touched, setFieldValue, setFieldTouched } =
+      useFormikContext<Record<string, Date | undefined>>()
 
     const innerRef = useRef<InputRef>(null)
 
@@ -289,8 +301,74 @@ export function withDateTimeField<T extends HasDateTypeProps>(WrappedComponent: 
       [propOnChange, name, setFieldValue, setFieldTouched]
     )
 
-    return <WrappedComponent ref={innerRef} {...rest} error={errors[name]} value={values[name]} onChange={onChange} />
+    return (
+      <WrappedComponent
+        ref={innerRef}
+        {...rest}
+        error={errors[name]}
+        touched={touched[name]}
+        value={values[name]}
+        onChange={onChange}
+      />
+    )
   }
 
   return forwardRef(RenderFn as unknown as ForwardRefRenderFunction<InputRef, any>)
+}
+
+/**
+ * Generic escape-hatch HOC for components that don't fit the four specific
+ * field patterns. Connects any component to Formik by mapping its prop names
+ * to Formik state via `FieldConfig`.
+ *
+ * The wrapped component receives:
+ * - `[valueProp]`   — current value from Formik state            (default: `'value'`)
+ * - `[changeProp]`  — calls `setFieldValue` + `setFieldTouched`  (default: `'onChange'`)
+ * - `[errorProp]`   — Formik validation error string             (default: `'error'`)
+ * - `[touchedProp]` — whether the field has been touched         (default: `'touched'`)
+ *
+ * @example
+ * // A star-rating component whose change handler is called `onRatingChange`
+ * const RatingField = withField<RatingProps, number>(StarRating, {
+ *   changeProp: 'onRatingChange',
+ * })
+ * <RatingField name="rating" maxStars={5} />
+ *
+ * // A colour picker with fully custom prop names
+ * const ColorField = withField<ColorPickerProps, string>(ColorPicker, {
+ *   valueProp: 'selectedColor',
+ *   changeProp: 'onColorSelected',
+ * })
+ * <ColorField name="brandColor" />
+ */
+export function withField<T, V = any>(
+  WrappedComponent: WrappedComponentType,
+  {
+    valueProp = 'value',
+    changeProp = 'onChange',
+    errorProp = 'error',
+    touchedProp = 'touched',
+  }: import('./types').FieldConfig = {}
+) {
+  return ({ name, ...rest }: GenericFieldProps & T) => {
+    const { values, errors, touched, setFieldValue, setFieldTouched } = useFormikContext<Record<string, V>>()
+
+    const onChange = useCallback(
+      (value: V) => {
+        setFieldValue(name, value)
+        setFieldTouched(name, true, false)
+      },
+      [name, setFieldValue, setFieldTouched]
+    )
+
+    return (
+      <WrappedComponent
+        {...(rest as any)}
+        {...{ [valueProp]: values[name] }}
+        {...{ [changeProp]: onChange }}
+        {...{ [errorProp]: errors[name] }}
+        {...{ [touchedProp]: touched[name] }}
+      />
+    )
+  }
 }

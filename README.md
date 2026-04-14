@@ -14,7 +14,8 @@ Inspired by [React Native Formik](https://github.com/bamlab/react-native-formik)
 **Features**
 
 - Automatically advance focus to the next input on submit (`returnKeyType="next"` / `"done"` set automatically)
-- Convert any React Native input into a Formik field with `withTextInputField`, `withBooleanField`, `withSelectField`, or `withDateTimeField`
+- Convert any React Native input into a Formik field with `withTextInputField`, `withBooleanField`, `withSelectField`, `withDateTimeField`, or the generic `withField`
+- Hook-based alternative: `useTextInputField`, `useBooleanField`, `useSelectField`, `useDateTimeField` for full rendering control
 - Drop-in `Form` component that handles submission, error display, and keyboard dismissal
 - Fully typed with TypeScript
 
@@ -199,6 +200,7 @@ Higher-order component that connects any `TextInput`-compatible component to For
 | ----------------- | ----------------------------------------------------------------- |
 | `value`           | Current field value from Formik state                             |
 | `error`           | Formik validation error string for this field                     |
+| `touched`         | Whether the field has been touched (`setFieldTouched` called)     |
 | `onChangeText`    | Updates Formik state on every keystroke                           |
 | `onBlur`          | Marks the field as touched in Formik                              |
 | `returnKeyType`   | `"next"` or `"done"` — set automatically by `<Form>`              |
@@ -233,6 +235,7 @@ Higher-order component for toggle/checkbox inputs.
 | --------- | ------------------------------------------------------ |
 | `value`   | Current boolean value from Formik state                |
 | `error`   | Validation error string                                |
+| `touched` | Whether the field has been touched                     |
 | `onPress` | Toggles the field value and marks the field as touched |
 
 **Required prop:**
@@ -253,6 +256,7 @@ Higher-order component for dropdown / picker inputs. The value type `V` defaults
 | --------------- | ----------------------------------------------------------- |
 | `value`         | Currently selected value from Formik state                  |
 | `error`         | Validation error string                                     |
+| `touched`       | Whether the field has been touched                          |
 | `onValueChange` | Updates Formik state and marks the field as touched on pick |
 
 **Additional props on the field component:**
@@ -295,6 +299,7 @@ Higher-order component for date, time, or date-time picker inputs.
 | ---------- | ----------------------------------------------------------- |
 | `value`    | Current `Date` (or `undefined`) from Formik state           |
 | `error`    | Validation error string                                     |
+| `touched`  | Whether the field has been touched                          |
 | `onChange` | Updates Formik state and marks the field as touched on pick |
 
 **Additional props on the field component:**
@@ -317,6 +322,120 @@ const BirthDateField = withDateTimeField<DateTimePickerProps>(DateTimePicker)
 // Date + time (e.g. appointment booking)
 const AppointmentField = withDateTimeField<DateTimePickerProps>(DateTimePicker)
 <AppointmentField name="appointmentAt" mode="datetime" />
+```
+
+---
+
+## Hooks
+
+Every HOC has a hook equivalent for when you want full control over rendering without wrapping a component.
+All hooks return `touched` alongside `error` so you can gate error display on interaction.
+
+### `useTextInputField(name, options?)`
+
+Returns Formik-connected props for a text input. Supports the same `type` presets as `withTextInputField`.
+
+```tsx
+function EmailInput({ name }: { name: string }) {
+  const { value, onChangeText, onBlur, error, touched, ...typeProps } = useTextInputField(name, { type: 'email' })
+
+  return (
+    <TextInput
+      {...typeProps}
+      value={value}
+      onChangeText={onChangeText}
+      onBlur={onBlur}
+      error={touched ? error : undefined}
+    />
+  )
+}
+```
+
+**Returns:**
+
+| Key               | Type                     | Description                             |
+| ----------------- | ------------------------ | --------------------------------------- |
+| `value`           | `string`                 | Current field value                     |
+| `error`           | `string \| undefined`    | Validation error                        |
+| `touched`         | `boolean \| undefined`   | Whether the field has been touched      |
+| `onChangeText`    | `(text: string) => void` | Updates Formik state on every keystroke |
+| `onBlur`          | `() => void`             | Marks the field as touched              |
+| `keyboardType`    | `string?`                | Set by `type` preset                    |
+| `secureTextEntry` | `boolean?`               | Set by `type: 'password'`               |
+| `autoCorrect`     | `boolean?`               | Set by `type` preset                    |
+| `autoCapitalize`  | `string?`                | Set by `type` preset                    |
+
+---
+
+### `useBooleanField(name)`
+
+```tsx
+function TosCheckbox({ name }: { name: string }) {
+  const { value, onPress, error, touched } = useBooleanField(name)
+  return <Checkbox checked={value} onPress={onPress} errorMessage={touched ? error : undefined} />
+}
+```
+
+**Returns:** `value: boolean`, `onPress: () => void`, `error`, `touched`
+
+---
+
+### `useSelectField<V>(name)`
+
+```tsx
+function CountrySelect({ name }: { name: string }) {
+  const { value, onValueChange, error, touched } = useSelectField<string>(name)
+  return (
+    <Select value={value} onValueChange={onValueChange} options={COUNTRY_OPTIONS} error={touched ? error : undefined} />
+  )
+}
+```
+
+**Returns:** `value: V | undefined`, `onValueChange: (v: V) => void`, `error`, `touched`
+
+---
+
+### `useDateTimeField(name)`
+
+```tsx
+function BirthDateInput({ name }: { name: string }) {
+  const { value, onChange, error, touched } = useDateTimeField(name)
+  return <DatePicker value={value} onChange={onChange} mode="date" error={touched ? error : undefined} />
+}
+```
+
+**Returns:** `value: Date | undefined`, `onChange: (d: Date) => void`, `error`, `touched`
+
+---
+
+## `withField<T, V>(Component, config?)`
+
+Generic escape-hatch HOC for components that don't fit the four specific patterns. Connects any component to Formik by mapping its prop names to Formik state.
+
+**`FieldConfig` options:**
+
+| Option        | Type     | Default      | Description                           |
+| ------------- | -------- | ------------ | ------------------------------------- |
+| `valueProp`   | `string` | `'value'`    | Prop the component uses to show value |
+| `changeProp`  | `string` | `'onChange'` | Prop called when the value changes    |
+| `errorProp`   | `string` | `'error'`    | Prop for displaying the error string  |
+| `touchedProp` | `string` | `'touched'`  | Prop for the touched boolean          |
+
+**Example:**
+
+```tsx
+// A star-rating component whose change handler is called onRatingChange
+const RatingField = withField<RatingProps, number>(StarRating, {
+  changeProp: 'onRatingChange',
+})
+<RatingField name="rating" maxStars={5} />
+
+// A color picker with fully custom prop names
+const ColorField = withField<ColorPickerProps, string>(ColorPicker, {
+  valueProp: 'selectedColor',
+  changeProp: 'onColorSelected',
+})
+<ColorField name="brandColor" />
 ```
 
 ---

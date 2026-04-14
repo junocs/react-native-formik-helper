@@ -107,3 +107,62 @@ export interface InputFieldEnhancementProps {
   onSubmitEditing: () => void
   fieldRegistrationRef: (instance: { focus?: () => void } | null) => void
 }
+
+// ---------------------------------------------------------------------------
+// useField hook return types
+// ---------------------------------------------------------------------------
+
+export interface UseTextInputFieldResult {
+  value: string
+  error: string | undefined
+  touched: boolean | undefined
+  onChangeText: (text: string) => void
+  onBlur: (...args: any[]) => void
+  // type-preset props (populated when `type` option is provided)
+  keyboardType?: string
+  secureTextEntry?: boolean
+  autoCorrect?: boolean
+  autoCapitalize?: string
+}
+
+export interface UseBooleanFieldResult {
+  value: boolean
+  error: string | undefined
+  touched: boolean | undefined
+  onPress: () => void
+}
+
+export interface UseSelectFieldResult<V = string> {
+  value: V | undefined
+  error: string | undefined
+  touched: boolean | undefined
+  onValueChange: (value: V) => void
+}
+
+export interface UseDateTimeFieldResult {
+  value: Date | undefined
+  error: string | undefined
+  touched: boolean | undefined
+  onChange: (date: Date) => void
+}
+
+// ---------------------------------------------------------------------------
+// withField generic HOC config
+// ---------------------------------------------------------------------------
+
+/**
+ * Prop-name mapping for `withField`. Override any key to match the prop names
+ * your component uses.
+ *
+ * @default { valueProp: 'value', changeProp: 'onChange', errorProp: 'error', touchedProp: 'touched' }
+ */
+export interface FieldConfig {
+  /** Prop the component uses to receive the current value. @default 'value' */
+  valueProp?: string
+  /** Prop the component calls when the value changes. @default 'onChange' */
+  changeProp?: string
+  /** Prop the component uses to display a validation error. @default 'error' */
+  errorProp?: string
+  /** Prop the component uses to know whether it has been touched. @default 'touched' */
+  touchedProp?: string
+}
