@@ -1,6 +1,6 @@
 {
   "name": "react-native-formik-helper",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Formik helper components for React Native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -25,7 +25,7 @@
     "clean": "del-cli lib",
     "prepare": "bob build",
     "typecheck": "tsc",
-    "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "lint": "prettier --write \"**/*.{js,ts,tsx}\" && eslint \"**/*.{js,ts,tsx}\"",
     "test": "jest --passWithNoTests",
     "postinstall": "del-cli node_modules/@types/hoist-non-react-statics/node_modules/@types/react node_modules/react-native/node_modules/@types/react"
   },

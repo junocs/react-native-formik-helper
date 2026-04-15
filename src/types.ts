@@ -109,44 +109,6 @@ export interface InputFieldEnhancementProps {
 }
 
 // ---------------------------------------------------------------------------
-// useField hook return types
-// ---------------------------------------------------------------------------
-
-export interface UseTextInputFieldResult {
-  value: string
-  error: string | undefined
-  touched: boolean | undefined
-  onChangeText: (text: string) => void
-  onBlur: (...args: any[]) => void
-  // type-preset props (populated when `type` option is provided)
-  keyboardType?: string
-  secureTextEntry?: boolean
-  autoCorrect?: boolean
-  autoCapitalize?: string
-}
-
-export interface UseBooleanFieldResult {
-  value: boolean
-  error: string | undefined
-  touched: boolean | undefined
-  onPress: () => void
-}
-
-export interface UseSelectFieldResult<V = string> {
-  value: V | undefined
-  error: string | undefined
-  touched: boolean | undefined
-  onValueChange: (value: V) => void
-}
-
-export interface UseDateTimeFieldResult {
-  value: Date | undefined
-  error: string | undefined
-  touched: boolean | undefined
-  onChange: (date: Date) => void
-}
-
-// ---------------------------------------------------------------------------
 // withField generic HOC config
 // ---------------------------------------------------------------------------
 
